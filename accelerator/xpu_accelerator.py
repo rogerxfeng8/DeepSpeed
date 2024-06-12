@@ -5,6 +5,7 @@
 
 import torch
 from deepspeed.accelerator.abstract_accelerator import DeepSpeedAccelerator
+from deepspeed.utils.torch import required_torch_version
 import intel_extension_for_pytorch as ipex  # noqa: F401 # type: ignore
 import oneccl_bindings_for_pytorch  # noqa: F401 # type: ignore
 import functools
@@ -159,7 +160,10 @@ class XPU_Accelerator(DeepSpeedAccelerator):
         return
 
     def lazy_call(self, callback):
-        return torch.xpu.lazy_init._lazy_call(callback)
+        if required_torch_version(max_version=2.3):
+            return torch.xpu.lazy_init._lazy_call(callback)
+        else:
+            return torch.xpu._lazy_call(callback)
 
     def communication_backend_name(self):
         return self._communication_backend_name
